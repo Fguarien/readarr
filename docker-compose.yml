@@ -1,0 +1,36 @@
+services:
+  readarr:
+    image: ghcr.io/pennydreadful/bookshelf:hardcover-v0.4.20.91
+    container_name: readarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - DOTNET_SYSTEM_NET_DISABLEIPV6=${DOTNET_SYSTEM_NET_DISABLEIPV6}
+      - DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2SUPPORT=${DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2SUPPORT}
+    volumes:
+      - ${DATA_ROOT}/readarr:/config
+      - ${BOOKS_DIR}:/books
+      - ${AUDIOBOOKS_DIR}:/audiobooks
+      - ${DOWNLOADS_DIR}:/downloads
+    networks:
+      - media_services_network
+    ports:
+      - "${READARR_PORT}:8787"
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:8787/ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "3"
+networks:
+  media_services_network:
+    external: true
